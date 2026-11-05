@@ -29,7 +29,8 @@ function doPost(e) {
 
     const action = data.action;
 
-    // 1. 查詢 2026 祭改名單
+    // # * 11051310 更改欄位
+    // 1. 查詢 2026 祭改名單：姓名 D 欄、住址 B 欄
     if (action === "search_jigai_2026") {
       const sheetId = data.sheetId;
       const ss = SpreadsheetApp.openById(sheetId);
@@ -42,8 +43,8 @@ function doPost(e) {
       if (searchName) {
         const matchedAddresses = [];
         for (let i = 1; i < rows.length; i++) {
-          const name = String(rows[i][0]).trim();
           const addr = String(rows[i][1]).trim();
+          const name = String(rows[i][3]).trim();
           if (name === searchName && addr) {
             if (!matchedAddresses.includes(addr)) {
               matchedAddresses.push(addr);
@@ -55,8 +56,8 @@ function doPost(e) {
       else if (searchAddress) {
         const matchedPeople = [];
         for (let i = 1; i < rows.length; i++) {
-          const name = String(rows[i][0]).trim();
           const addr = String(rows[i][1]).trim();
+          const name = String(rows[i][3]).trim();
           if (addr === searchAddress) {
             matchedPeople.push({ name: name, address: addr });
           }
