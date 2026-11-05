@@ -182,7 +182,7 @@ if st.session_state.selected_address and st.session_state.people_list:
                   "選項人數": count,
                   "系統備註": system_note,
                   "經手人": "LTG官方Line",
-                  "經手人備註": "已收",
+                  "經手人備註": "祭改報名系統自動產生",
               }
               pdf_bytes = create_receipt_pdf(receipt_data)
               try:

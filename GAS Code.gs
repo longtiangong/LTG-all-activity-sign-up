@@ -208,8 +208,12 @@ function doGet(e) {
 }
 
 function authorizeReceiptDriveAccess() {
-  const folder = DriveApp.getRootFolder();
-  console.log(`Google Drive access authorized: ${folder.getName()}`);
+  const testFile = DriveApp.createFile(
+    "龍天宮 Drive 授權測試（可刪除）",
+    "此暫存檔用於確認收據 PDF 所需的 Drive 寫入權限。"
+  );
+  testFile.setTrashed(true);
+  console.log("Google Drive file creation access authorized.");
 }
 
 function htmlEscape(value) {
