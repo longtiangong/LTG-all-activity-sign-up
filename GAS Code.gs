@@ -120,14 +120,101 @@ function doPost(e) {
       return responseJSON({
         status: "success",
         receiptNo: receiptNo,
+        openedAt: formatDateTime(now),
         qrCodeUrl: qrCodeUrl,
         message: `116年(2027年)祭改人數${data.count}人金額為${data.totalAmount}元`
+      });
+    }
+
+    // # * 11051406 更改PDF放的路徑
+    if (action === "save_registration_pdf") {
+      if (!data.folderId) {
+        return responseJSON({
+          status: "error",
+          message: "未設定收執聯與存根聯 PDF 資料夾 ID"
+        });
+      }
+
+      const sheet = SpreadsheetApp.openById(data.incomeSheetId)
+        .getActiveSheet();
+      const receiptCell = sheet.getRange("A:A")
+        .createTextFinder(String(data.receiptNo))
+        .matchEntireCell(true)
+        .findNext();
+      if (!receiptCell) {
+        return responseJSON({
+          status: "error",
+          message: `收入表找不到收據編號「${data.receiptNo}」`
+        });
+      }
+
+      const pdfBlob = Utilities.newBlob(
+        Utilities.base64Decode(data.pdfBase64),
+        "application/pdf",
+        `${data.receiptNo}.pdf`
+      );
+      const pdfFolder = DriveApp.getFolderById(String(data.folderId));
+      const pdfFile = pdfFolder.createFile(pdfBlob);
+      pdfFile.setSharing(
+        DriveApp.Access.ANYONE_WITH_LINK,
+        DriveApp.Permission.VIEW
+      );
+      sheet.getRange(receiptCell.getRow(), 12).setValue(pdfFile.getUrl());
+      PropertiesService.getScriptProperties().setProperty(
+        "SHEET_INCOME_ID",
+        data.incomeSheetId
+      );
+
+      return responseJSON({
+        status: "success",
+        pdfUrl: pdfFile.getUrl()
       });
     }
 
   } catch (err) {
     return responseJSON({ status: "error", message: err.toString() });
   }
+}
+
+function doGet(e) {
+  const receiptNo = e && e.parameter ? e.parameter.receipt : "";
+  const incomeSheetId = PropertiesService.getScriptProperties()
+    .getProperty("SHEET_INCOME_ID");
+  if (!receiptNo || !incomeSheetId) {
+    return HtmlService.createHtmlOutput("找不到此收據。");
+  }
+
+  try {
+    const sheet = SpreadsheetApp.openById(incomeSheetId).getActiveSheet();
+    const receiptCell = sheet.getRange("A:A")
+      .createTextFinder(String(receiptNo))
+      .matchEntireCell(true)
+      .findNext();
+    const pdfUrl = receiptCell
+      ? sheet.getRange(receiptCell.getRow(), 12).getValue()
+      : "";
+    if (!pdfUrl) {
+      return HtmlService.createHtmlOutput("找不到此收據 PDF。");
+    }
+
+    return HtmlService.createHtmlOutput(
+      `<p>龍天宮收據已建立：<a href="${htmlEscape(pdfUrl)}">開啟 PDF</a></p>`
+    );
+  } catch (err) {
+    return HtmlService.createHtmlOutput(
+      `讀取收據失敗：${htmlEscape(err.toString())}`
+    );
+  }
+}
+
+function htmlEscape(value) {
+  return String(value).replace(/[&<>"']/g, character => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[character]));
 }
 
 function sendTelegramMessage(botToken, chatId, messageText) {
