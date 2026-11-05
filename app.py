@@ -57,7 +57,8 @@ if st.button("查詢歷史地址"):
               "⚠️ 去年未參與祭改，請直接回原報名連結進行填寫"
           )
       else:
-        st.error("查詢失敗，請檢查系統連結與 secrets 設定。")
+        error_message = res.get("message", "未知錯誤")
+        st.error(f"查詢失敗：{error_message}")
 
 if st.session_state.search_done and st.session_state.matched_addresses:
   st.success(

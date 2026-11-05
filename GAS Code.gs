@@ -30,11 +30,18 @@ function doPost(e) {
     const action = data.action;
 
     // # * 11051310 更改欄位
-    // 1. 查詢 2026 祭改名單：姓名 D 欄、住址 B 欄
+    // 1. 查詢指定分頁的祭改名單：姓名 D 欄、住址 B 欄
     if (action === "search_jigai_2026") {
       const sheetId = data.sheetId;
       const ss = SpreadsheetApp.openById(sheetId);
-      const sheet = ss.getActiveSheet();
+      const sheetName = "2026年正月祭改工作表名稱";
+      const sheet = ss.getSheetByName(sheetName);
+      if (!sheet) {
+        return responseJSON({
+          status: "error",
+          message: `找不到工作表分頁「${sheetName}」`
+        });
+      }
       const rows = sheet.getDataRange().getValues();
       
       const searchName = data.name;
