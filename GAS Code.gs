@@ -207,6 +207,11 @@ function doGet(e) {
   }
 }
 
+function authorizeReceiptDriveAccess() {
+  const folder = DriveApp.getRootFolder();
+  console.log(`Google Drive access authorized: ${folder.getName()}`);
+}
+
 function htmlEscape(value) {
   return String(value).replace(/[&<>"']/g, character => ({
     "&": "&amp;",
