@@ -146,7 +146,7 @@ if st.session_state.selected_address and st.session_state.people_list:
               "填入「5.收執聯與存根聯」資料夾 ID。"
           )
         else:
-          with st.spinner("正在寫入收入表與發送 Telegram 通知..."):
+          with st.spinner("正在寫入收入表、產生 PDF 並發送 Telegram 通知..."):
             submit_res = call_gas(
                 "submit_registration",
                 {
@@ -155,8 +155,6 @@ if st.session_state.selected_address and st.session_state.people_list:
                     "peopleNames": selected_people,
                     "count": count,
                     "totalAmount": total_amount,
-                    "telegramBotToken": TELEGRAM_BOT_TOKEN,
-                    "telegramChatId": TELEGRAM_CHAT_ID,
                 },
             )
 
@@ -193,6 +191,12 @@ if st.session_state.selected_address and st.session_state.people_list:
                         "receiptNo": receipt_no,
                         "folderId": RECEIPT_PDF_FOLDER_ID,
                         "pdfBase64": base64.b64encode(pdf_bytes).decode("ascii"),
+                        "address": st.session_state.selected_address,
+                        "peopleNames": selected_people,
+                        "count": count,
+                        "totalAmount": total_amount,
+                        "telegramBotToken": TELEGRAM_BOT_TOKEN,
+                        "telegramChatId": TELEGRAM_CHAT_ID,
                     },
                 )
               except requests.RequestException as error:
@@ -214,6 +218,10 @@ if st.session_state.selected_address and st.session_state.people_list:
                 st.session_state.submission_result["pdfUrl"] = pdf_result.get(
                     "pdfUrl", ""
                 )
+                if pdf_result.get("telegramStatus") == "error":
+                  st.session_state.submission_result["telegramError"] = (
+                      pdf_result.get("telegramError", "未知錯誤")
+                  )
               else:
                 st.session_state.submission_result["pdfError"] = pdf_result.get(
                     "message", "未知錯誤"
@@ -252,6 +260,8 @@ if st.session_state.submission_result:
     )
   if pdf_url:
     st.link_button("開啟線上收據 PDF", pdf_url)
+    if res.get("telegramError"):
+      st.warning(f"PDF 已建立，但 Telegram 通知失敗：{res['telegramError']}")
   else:
     st.error(
         "報名已寫入，但 PDF 上傳至 Google Drive 失敗："

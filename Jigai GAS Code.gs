@@ -81,8 +81,6 @@ function doPost(e) {
       const datePrefix = formatDate(now).replace(/-/g, "");
       const receiptNo = `LTG-${datePrefix}-${String(timestamp).slice(-3)}`;
       
-      const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(receiptNo)}`;
-      
       const incomeSheet = SpreadsheetApp.openById(data.incomeSheetId).getActiveSheet();
       
       const primaryName = data.peopleNames && data.peopleNames.length > 0 ? data.peopleNames[0] : "";
@@ -100,28 +98,15 @@ function doPost(e) {
         data.count,                  // I: 選項人數
         systemNote,                  // J: 系統備註
         "已收",                       // K: 經手人備註
-        qrCodeUrl,                   // L: PDF連結/QR連結
+        "",                          // L: PDF連結（上傳 PDF 後填入）
         formatDate(now),             // M: 收入日期
         "LTG官方Line"                // N: 經手人
       ]);
-
-      const notifyMsg = `【龍天宮 116(2027)年 正月祭改報名通知】\n` +
-                        `收據編號：${receiptNo}\n` +
-                        `姓名代表：${primaryName}\n` +
-                        `地址：${data.address}\n` +
-                        `報名人員：${data.peopleNames.join(", ")}\n` +
-                        `116年(2027年)祭改人數 ${data.count} 人，金額為 ${data.totalAmount} 元\n\n` +
-                        `QR Code 連結：\n${qrCodeUrl}`;
-
-      if (data.telegramBotToken && data.telegramChatId) {
-        sendTelegramMessage(data.telegramBotToken, data.telegramChatId, notifyMsg);
-      }
 
       return responseJSON({
         status: "success",
         receiptNo: receiptNo,
         openedAt: formatDateTime(now),
-        qrCodeUrl: qrCodeUrl,
         message: `116年(2027年)祭改人數${data.count}人金額為${data.totalAmount}元`
       });
     }
@@ -165,9 +150,34 @@ function doPost(e) {
         data.incomeSheetId
       );
 
+      let telegramResult = { status: "skipped" };
+      if (data.telegramBotToken && data.telegramChatId) {
+        const notifyMsg = `【龍天宮 116(2027)年 正月祭改報名通知】\n` +
+                          `收據編號：${data.receiptNo}\n` +
+                          `姓名代表：${data.peopleNames[0]}\n` +
+                          `地址：${data.address}\n` +
+                          `報名人員：${data.peopleNames.join(", ")}\n` +
+                          `116年(2027年)祭改人數 ${data.count} 人，金額為 ${data.totalAmount} 元\n\n` +
+                          `收據 PDF 連結：\n${pdfFile.getUrl()}`;
+        try {
+          telegramResult = sendTelegramMessage(
+            data.telegramBotToken,
+            data.telegramChatId,
+            notifyMsg
+          );
+        } catch (telegramError) {
+          telegramResult = {
+            status: "error",
+            message: telegramError.toString()
+          };
+        }
+      }
+
       return responseJSON({
         status: "success",
-        pdfUrl: pdfFile.getUrl()
+        pdfUrl: pdfFile.getUrl(),
+        telegramStatus: telegramResult.status,
+        telegramError: telegramResult.message || ""
       });
     }
 
@@ -232,7 +242,7 @@ function sendTelegramMessage(botToken, chatId, messageText) {
     chat_id: chatId,
     text: messageText
   };
-  UrlFetchApp.fetch(url, {
+  const response = UrlFetchApp.fetch(url, {
     method: "post",
     headers: {
       "Content-Type": "application/json"
@@ -240,6 +250,15 @@ function sendTelegramMessage(botToken, chatId, messageText) {
     payload: JSON.stringify(payload),
     muteHttpExceptions: true
   });
+  const responseCode = response.getResponseCode();
+  const result = JSON.parse(response.getContentText());
+  if (responseCode < 200 || responseCode >= 300 || !result.ok) {
+    return {
+      status: "error",
+      message: result.description || `Telegram API 回應 HTTP ${responseCode}`
+    };
+  }
+  return { status: "success" };
 }
 
 function responseJSON(obj) {
