@@ -34,7 +34,7 @@ function doPost(e) {
     if (action === "search_jigai_2026") {
       const sheetId = data.sheetId;
       const ss = SpreadsheetApp.openById(sheetId);
-      const sheetName = "2026年正月祭改工作表名稱";
+      const sheetName = "2026年正月祭改";
       const sheet = ss.getSheetByName(sheetName);
       if (!sheet) {
         return responseJSON({
