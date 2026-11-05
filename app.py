@@ -1,4 +1,6 @@
 import urllib.parse
+import uuid
+
 import requests
 import streamlit as st
 
@@ -32,6 +34,8 @@ if "search_done" not in st.session_state:
   st.session_state.search_done = False
 if "submission_result" not in st.session_state:
   st.session_state.submission_result = None
+if "people_selection_id" not in st.session_state:
+  st.session_state.people_selection_id = uuid.uuid4().hex
 
 # 規則 1：輸入姓名帶出地址
 input_name = st.text_input("請輸入姓名查詢：", placeholder="例如：張一")
@@ -68,6 +72,9 @@ if st.session_state.search_done and st.session_state.matched_addresses:
   for idx, addr in enumerate(st.session_state.matched_addresses):
     if st.button(f"📍 確認地址：{addr}", key=f"addr_btn_{idx}"):
       st.session_state.selected_address = addr
+      st.session_state.people_selection_id = uuid.uuid4().hex
+      st.session_state.people_list = []
+      st.session_state.submission_result = None
       with st.spinner("載入該住址名單..."):
         people_res = call_gas(
             "search_jigai_2026",
@@ -77,27 +84,43 @@ if st.session_state.search_done and st.session_state.matched_addresses:
           st.session_state.people_list = [
               p["name"] for p in people_res.get("people", [])
           ]
+        else:
+          error_message = people_res.get("message", "未知錯誤")
+          st.error(f"載入住址名單失敗：{error_message}")
 
-# 規則 2：勾選 116年(2027年) 祭改與計算金額
+# # * 11051346 更改個別可選擇
+# 規則 2：個別選擇參加 116 年（2027 年）祭改的人員
 if st.session_state.selected_address and st.session_state.people_list:
   st.markdown("---")
   st.write(f"**確認地址：** {st.session_state.selected_address}")
   st.write(
-      f"**同住址 2026 年參加名單（共 {len(st.session_state.people_list)} 人）：**"
-      f" {', '.join(st.session_state.people_list)}"
+      f"**同住址 2026 年參加名單（共 {len(st.session_state.people_list)} 人），"
+      "請勾選本次參加者：**"
   )
+  selected_indices = []
+  for idx, name in enumerate(st.session_state.people_list):
+    if st.checkbox(
+        f"參加 116 年（2027 年）祭改：{name}",
+        key=f"jigai_person_{st.session_state.people_selection_id}_{idx}",
+    ):
+      selected_indices.append(idx)
 
-  jigai_checkbox = st.checkbox("☑️ 參加 116年(2027年)祭改")
+  selected_people = [
+      st.session_state.people_list[idx] for idx in selected_indices
+  ]
+  count = len(selected_people)
+  unit_price = 300
+  total_amount = count * unit_price
 
-  if jigai_checkbox:
-    count = len(st.session_state.people_list)
-    unit_price = 300
-    total_amount = count * unit_price
-
+  if count:
     summary_text = f"116年(2027年)祭改人數 {count} 人金額為 {total_amount} 元"
     st.info(f"💡 **報名統計：** {summary_text}")
 
-    confirm_amount = st.checkbox("點擊確認金額無誤")
+    confirm_key = (
+        f"confirm_amount_{st.session_state.people_selection_id}_"
+        f"{','.join(map(str, selected_indices))}"
+    )
+    confirm_amount = st.checkbox("點擊確認金額無誤", key=confirm_key)
 
     if confirm_amount:
       if st.button("🚀 送出報名並產生繳費 QR Code"):
@@ -107,7 +130,7 @@ if st.session_state.selected_address and st.session_state.people_list:
               {
                   "incomeSheetId": SHEET_INCOME_ID,
                   "address": st.session_state.selected_address,
-                  "peopleNames": st.session_state.people_list,
+                  "peopleNames": selected_people,
                   "count": count,
                   "totalAmount": total_amount,
                   "telegramBotToken": TELEGRAM_BOT_TOKEN,
@@ -119,8 +142,12 @@ if st.session_state.selected_address and st.session_state.people_list:
             st.session_state.submission_result = submit_res
             st.session_state.submission_result["count"] = count
             st.session_state.submission_result["totalAmount"] = total_amount
+            st.session_state.submission_result["peopleNames"] = selected_people
           else:
-            st.error("報名失敗，請稍後再試。")
+            error_message = submit_res.get("message", "未知錯誤")
+            st.error(f"報名失敗：{error_message}")
+  else:
+    st.caption("請至少勾選一位參加者。")
 
 if st.session_state.submission_result:
   res = st.session_state.submission_result
@@ -128,6 +155,7 @@ if st.session_state.submission_result:
   qr_code_url = res.get("qrCodeUrl")
   count = res.get("count")
   total_amount = res.get("totalAmount")
+  people_names = res.get("peopleNames", [])
 
   st.success("🎉 報名資料已成功寫入收入表！")
 
@@ -140,7 +168,7 @@ if st.session_state.submission_result:
       f"【龍天宮 116(2027)年 正月祭改報名】\n"
       f"收據編號：{receipt_no}\n"
       f"地址：{st.session_state.selected_address}\n"
-      f"報名人員：{', '.join(st.session_state.people_list)}\n"
+      f"報名人員：{', '.join(people_names)}\n"
       f"116年(2027年)祭改人數 {count} 人金額為 {total_amount} 元\n\n"
       f"繳款 QR Code 連結：\n{qr_code_url}"
   )
