@@ -334,7 +334,7 @@ if name_is_verified and st.session_state.submission_result:
       f"收據編號：{receipt_no}\n"
       f"地址：{st.session_state.selected_address}\n"
       f"報名人員：{', '.join(people_names)}\n"
-      f"116年(2027年)祭改人數 {count} 人金額為 {total_amount} 元\n\n"
+      f"116年(2027年)祭改人數 {count} 人金額共 {total_amount} 元\n\n"
       f"收據 PDF：\n{pdf_url or '請使用網站上的下載按鈕'}"
   )
 
