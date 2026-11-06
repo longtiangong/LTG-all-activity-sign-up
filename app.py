@@ -95,8 +95,9 @@ name_is_verified = (
 )
 
 if name_is_verified:
+  # * 11061214 再輸入手機號碼當個別密碼
   input_phone = st.text_input(
-      "請輸入手機號碼驗證資料並查詢去年住址：",
+      "請輸入手機號碼（作為個別密碼）：",
       placeholder="請輸入信徒資料總表登記的手機號碼",
   )
   if st.button("驗證手機並查詢去年住址"):
