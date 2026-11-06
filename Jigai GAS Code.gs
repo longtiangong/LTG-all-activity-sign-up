@@ -74,10 +74,10 @@ function doPost(e) {
     }
 
     if (action === "search_believer_address") {
-      const sheetId = data.sheetId;
-      const ss = SpreadsheetApp.openById(sheetId);
-      const sheet = ss.getSheetByName("信徒資料總表") || ss.getActiveSheet();
-      const rows = sheet.getDataRange().getDisplayValues();
+      const believerSpreadsheet = SpreadsheetApp.openById(data.believerSheetId);
+      const believerSheet = believerSpreadsheet.getSheetByName("信徒資料總表")
+        || believerSpreadsheet.getActiveSheet();
+      const believerRows = believerSheet.getDataRange().getDisplayValues();
       const searchPhone = String(data.phone || "").replace(/\D/g, "");
       const searchName = String(data.name || "").trim();
 
@@ -88,20 +88,40 @@ function doPost(e) {
         });
       }
 
-      const matchedAddresses = [];
-      for (let i = 1; i < rows.length; i++) {
-        const phone = String(rows[i][0]).replace(/\D/g, "");
-        const address = String(rows[i][1]).trim();
-        const name = String(rows[i][3]).trim();
-        if (
-          phone === searchPhone &&
-          name === searchName &&
-          address &&
-          !matchedAddresses.includes(address)
-        ) {
-          matchedAddresses.push(address);
+      let believerMatched = false;
+      for (let i = 1; i < believerRows.length; i++) {
+        const phone = String(believerRows[i][0]).replace(/\D/g, "");
+        const name = String(believerRows[i][3]).trim();
+        if (phone === searchPhone && name === searchName) {
+          believerMatched = true;
+          break;
         }
       }
+
+      const matchedAddresses = [];
+      if (believerMatched) {
+        const jigaiSpreadsheet = SpreadsheetApp.openById(data.jigaiSheetId);
+        const jigaiSheet = jigaiSpreadsheet.getSheetByName("2026年正月祭改");
+        if (!jigaiSheet) {
+          return responseJSON({
+            status: "error",
+            message: "找不到工作表分頁「2026年正月祭改」"
+          });
+        }
+        const jigaiRows = jigaiSheet.getDataRange().getDisplayValues();
+        for (let i = 1; i < jigaiRows.length; i++) {
+          const address = String(jigaiRows[i][1]).trim();
+          const name = String(jigaiRows[i][3]).trim();
+          if (
+            name === searchName &&
+            address &&
+            !matchedAddresses.includes(address)
+          ) {
+            matchedAddresses.push(address);
+          }
+        }
+      }
+
       return responseJSON({
         status: "success",
         addresses: matchedAddresses

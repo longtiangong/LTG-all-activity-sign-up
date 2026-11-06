@@ -96,18 +96,19 @@ name_is_verified = (
 
 if name_is_verified:
   input_phone = st.text_input(
-      "請輸入手機號碼查詢住址：",
+      "請輸入手機號碼驗證資料並查詢去年住址：",
       placeholder="請輸入信徒資料總表登記的手機號碼",
   )
-  if st.button("查詢手機與住址"):
+  if st.button("驗證手機並查詢去年住址"):
     if not SHEET_BELIEVER_ID:
       st.error("請先在 Streamlit secrets 設定 SHEET_BELIEVER_ID。")
     elif input_phone.strip():
-      with st.spinner("查詢信徒資料總表中..."):
+      with st.spinner("驗證信徒資料並查詢去年住址中..."):
         res = call_gas(
             "search_believer_address",
             {
-                "sheetId": SHEET_BELIEVER_ID,
+                "believerSheetId": SHEET_BELIEVER_ID,
+                "jigaiSheetId": SHEET_2026_JIGAI_ID,
                 "name": st.session_state.verified_name,
                 "phone": input_phone.strip(),
             },
@@ -123,11 +124,11 @@ if name_is_verified:
 
           if not addresses:
             st.warning(
-                "查無此姓名與手機號碼的住址，請聯絡龍天宮小編建檔。"
+                "查無符合的去年住址，請聯絡龍天宮小編建檔。"
             )
         else:
           error_message = res.get("message", "未知錯誤")
-          st.error(f"查詢信徒資料總表失敗：{error_message}")
+          st.error(f"驗證信徒資料或查詢去年住址失敗：{error_message}")
     else:
       st.warning("請先輸入手機號碼。")
 
