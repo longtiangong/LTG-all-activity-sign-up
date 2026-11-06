@@ -13,6 +13,7 @@ GAS_API_KEY = st.secrets["GAS_API_KEY"]
 SHEET_INCOME_ID = st.secrets["SHEET_INCOME_ID"]
 SHEET_CATEGORY_ID = st.secrets["SHEET_CATEGORY_ID"]
 SHEET_2026_JIGAI_ID = st.secrets["SHEET_2026_JIGAI_ID"]
+SHEET_BELIEVER_ID = str(st.secrets.get("SHEET_BELIEVER_ID", "")).strip()
 # * 11051406 更改PDF放的路徑
 RECEIPT_PDF_FOLDER_ID = str(
     st.secrets.get("RECEIPT_PDF_FOLDER_ID", "")
@@ -48,15 +49,19 @@ if "people_list" not in st.session_state:
   st.session_state.people_list = []
 if "search_done" not in st.session_state:
   st.session_state.search_done = False
+if "verified_name" not in st.session_state:
+  st.session_state.verified_name = None
+if "last_year_participant" not in st.session_state:
+  st.session_state.last_year_participant = False
 if "submission_result" not in st.session_state:
   st.session_state.submission_result = None
 if "people_selection_id" not in st.session_state:
   st.session_state.people_selection_id = uuid.uuid4().hex
 
-# 規則 1：輸入姓名帶出地址
-input_name = st.text_input("請輸入姓名查詢：", placeholder="例如：張一")
+# 規則 1：先確認去年是否參與，再以手機查詢信徒資料總表中的住址
+input_name = st.text_input("請輸入姓名：", placeholder="例如：張一")
 
-if st.button("查詢歷史地址"):
+if st.button("確認是否去年有參加"):
   if input_name.strip():
     with st.spinner("查詢中..."):
       res = call_gas(
@@ -66,21 +71,73 @@ if st.button("查詢歷史地址"):
 
       if res.get("status") == "success":
         addresses = res.get("addresses", [])
-        st.session_state.matched_addresses = addresses
-        st.session_state.search_done = True
+        st.session_state.verified_name = input_name.strip()
+        st.session_state.last_year_participant = bool(addresses)
+        st.session_state.matched_addresses = []
+        st.session_state.search_done = False
         st.session_state.selected_address = None
         st.session_state.people_list = []
         st.session_state.submission_result = None
 
         if not addresses:
           st.error(
-              "⚠️ 去年未參與祭改，請直接回原報名連結進行填寫"
+              "⚠️ 查無去年參加紀錄，請直接回原報名連結進行填寫。"
           )
       else:
         error_message = res.get("message", "未知錯誤")
         st.error(f"查詢失敗：{error_message}")
+  else:
+    st.warning("請先輸入姓名。")
 
-if st.session_state.search_done and st.session_state.matched_addresses:
+name_is_verified = (
+    st.session_state.verified_name == input_name.strip()
+    and st.session_state.last_year_participant
+)
+
+if name_is_verified:
+  # * 11061214 再輸入手機號碼當個別密碼
+  input_phone = st.text_input(
+      "請輸入手機號碼（作為個別密碼）：",
+      placeholder="請輸入信徒資料總表登記的手機號碼",
+  )
+  if st.button("驗證手機並查詢去年住址"):
+    if not SHEET_BELIEVER_ID:
+      st.error("請先在 Streamlit secrets 設定 SHEET_BELIEVER_ID。")
+    elif input_phone.strip():
+      with st.spinner("驗證信徒資料並查詢去年住址中..."):
+        res = call_gas(
+            "search_believer_address",
+            {
+                "believerSheetId": SHEET_BELIEVER_ID,
+                "jigaiSheetId": SHEET_2026_JIGAI_ID,
+                "name": st.session_state.verified_name,
+                "phone": input_phone.strip(),
+            },
+        )
+
+        if res.get("status") == "success":
+          addresses = res.get("addresses", [])
+          st.session_state.matched_addresses = addresses
+          st.session_state.search_done = True
+          st.session_state.selected_address = None
+          st.session_state.people_list = []
+          st.session_state.submission_result = None
+
+          if not addresses:
+            st.warning(
+                "查無符合的去年住址，請聯絡龍天宮小編建檔。"
+            )
+        else:
+          error_message = res.get("message", "未知錯誤")
+          st.error(f"驗證信徒資料或查詢去年住址失敗：{error_message}")
+    else:
+      st.warning("請先輸入手機號碼。")
+
+if (
+    name_is_verified
+    and st.session_state.search_done
+    and st.session_state.matched_addresses
+):
   st.success(
       f"找到 {len(st.session_state.matched_addresses)} 個相關地址，請點擊確認地址："
   )
@@ -106,7 +163,11 @@ if st.session_state.search_done and st.session_state.matched_addresses:
 
 # # * 11051346 更改個別可選擇
 # 規則 2：個別選擇參加 116 年（2027 年）祭改的人員
-if st.session_state.selected_address and st.session_state.people_list:
+if (
+    name_is_verified
+    and st.session_state.selected_address
+    and st.session_state.people_list
+):
   st.markdown("---")
   st.write(f"**確認地址：** {st.session_state.selected_address}")
   st.write(
@@ -232,7 +293,7 @@ if st.session_state.selected_address and st.session_state.people_list:
   else:
     st.caption("請至少勾選一位參加者。")
 
-if st.session_state.submission_result:
+if name_is_verified and st.session_state.submission_result:
   res = st.session_state.submission_result
   receipt_no = res.get("receiptNo")
   count = res.get("count")
