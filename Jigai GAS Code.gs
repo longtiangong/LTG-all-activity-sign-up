@@ -73,6 +73,41 @@ function doPost(e) {
       }
     }
 
+    if (action === "search_believer_address") {
+      const sheetId = data.sheetId;
+      const ss = SpreadsheetApp.openById(sheetId);
+      const sheet = ss.getSheetByName("信徒資料總表") || ss.getActiveSheet();
+      const rows = sheet.getDataRange().getDisplayValues();
+      const searchPhone = String(data.phone || "").replace(/\D/g, "");
+      const searchName = String(data.name || "").trim();
+
+      if (!searchPhone || !searchName) {
+        return responseJSON({
+          status: "error",
+          message: "請提供姓名及手機號碼"
+        });
+      }
+
+      const matchedAddresses = [];
+      for (let i = 1; i < rows.length; i++) {
+        const phone = String(rows[i][0]).replace(/\D/g, "");
+        const address = String(rows[i][1]).trim();
+        const name = String(rows[i][3]).trim();
+        if (
+          phone === searchPhone &&
+          name === searchName &&
+          address &&
+          !matchedAddresses.includes(address)
+        ) {
+          matchedAddresses.push(address);
+        }
+      }
+      return responseJSON({
+        status: "success",
+        addresses: matchedAddresses
+      });
+    }
+
     // 2. 寫入收入表與推播 Telegram
     if (action === "submit_registration") {
       const now = new Date();
