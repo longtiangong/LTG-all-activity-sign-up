@@ -190,7 +190,7 @@ if (
   total_amount = count * unit_price
 
   if count:
-    summary_text = f"116年(2027年)祭改人數 {count} 人金額為 {total_amount} 元"
+    summary_text = f"116年(2027年)祭改人數 {count} 人金額共 {total_amount} 元"
     st.info(f"💡 **報名統計：** {summary_text}")
 
     confirm_key = (
@@ -226,7 +226,7 @@ if (
               ).strftime("%Y-%m-%d %H:%M:%S")
               qr_url = build_receipt_qr_url(receipt_no)
               system_note = (
-                  f"祭改祭改人數{count}人金額為{total_amount}元"
+                  f"祭改祭改人數{count}人金額共{total_amount}元"
               )
               receipt_data = {
                   "收據編號": receipt_no,
