@@ -1,4 +1,43 @@
 > [!NOTE]
+> 此系統包含： 法會直接點選報名
+請利用Python/ GitHub/ Streamlit完成
+建立要參加法會活動可以直接點選並關聯到收入表，可以選擇後自動產生資料及QR code連結同部送到官方Line及收入表內
+關聯資料：
+==祭改做範例==
+1. Google sheet: 收入表
+2. Google sheet: 收入科目金額
+3. Google sheet: 2026年正月祭改
+4. 官方Line
+5. 原報名系統的 'Original_Jigai.py
+6. 原收據系統的 receipt.py
+7. 信徒資料總表： 關聯信徒資料總表A欄手機至D欄姓名
+
+所有的google sheet ID/ 官方Line都寫在Streamlit secrets和 GAS_API_KEY及Web App 網址（`/exec` 結尾）
+
+
+所有的google sheet ID/ 官方Line都寫在Streamlit secrets和 GAS_API_KEY及Web App 網址（`/exec` 結尾）
+
+
+# 規則：
+1. 直接輸入姓名，確認是否去年有參加，若有再輸入手機號碼可以直接帶出住址，相同人名亦會帶出住址，點擊確認哪一個住址，可以帶出2026年正月祭改相同住址的所有人
+    關聯資料：2026年正月祭改/ 信徒資料總表
+2. 同時出現checkbox 116年(2027年)祭改點擊確認後，可以直接產生資料及QR code連結(相關規則參考Original_Jigai.py)
+    並送到官方Line及收入表內
+    關聯資料：收入表/ 收入科目金額/ 官方Line/ 原報名系統的 Original_Jigai.py
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- > [!NOTE]
 > 此系統包含：
 > - 信徒資料
 >   - 查詢增加全家人資料
@@ -141,4 +180,4 @@ PDF連結網路和google表單都要有
 **這段文字會加粗** 或 __這段文字會加粗__
 *這段文字會變斜體* 或 _這段文字會變斜體_
 ***這段文字又粗又斜***
-~~這段文字已被劃掉~~
+~~這段文字已被劃掉~~ -->
