@@ -89,18 +89,18 @@ function doPost(e) {
         });
       }
 
-      let believerMatched = false;
+      const phoneMatchedNames = new Set();
       for (let i = 1; i < believerRows.length; i++) {
         const phone = String(believerRows[i][0]).replace(/\D/g, "");
         const name = String(believerRows[i][3]).trim();
-        if (phone === searchPhone && name === searchName) {
-          believerMatched = true;
-          break;
+        if (phone === searchPhone && name) {
+          phoneMatchedNames.add(name);
         }
       }
 
       const matchedAddresses = [];
-      if (believerMatched) {
+      const matchedPeople = [];
+      if (phoneMatchedNames.has(searchName)) {
         const jigaiSpreadsheet = SpreadsheetApp.openById(data.jigaiSheetId);
         const jigaiSheet = jigaiSpreadsheet.getSheetByName("2026年正月祭改");
         if (!jigaiSheet) {
@@ -113,19 +113,27 @@ function doPost(e) {
         for (let i = 1; i < jigaiRows.length; i++) {
           const address = String(jigaiRows[i][1]).trim();
           const name = String(jigaiRows[i][3]).trim();
-          if (
-            name === searchName &&
-            address &&
-            !matchedAddresses.includes(address)
-          ) {
-            matchedAddresses.push(address);
+          if (phoneMatchedNames.has(name) && address) {
+            if (!matchedAddresses.includes(address)) {
+              matchedAddresses.push(address);
+            }
+
+            let person = matchedPeople.find(item => item.name === name);
+            if (!person) {
+              person = { name: name, addresses: [] };
+              matchedPeople.push(person);
+            }
+            if (!person.addresses.includes(address)) {
+              person.addresses.push(address);
+            }
           }
         }
       }
 
       return responseJSON({
         status: "success",
-        addresses: matchedAddresses
+        addresses: matchedAddresses,
+        people: matchedPeople
       });
     }
 

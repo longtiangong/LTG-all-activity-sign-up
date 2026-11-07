@@ -43,6 +43,8 @@ st.title("⛩️ 龍天宮 民國116(2027)年 正月祭改快速報名")
 
 if "matched_addresses" not in st.session_state:
   st.session_state.matched_addresses = []
+if "matched_people" not in st.session_state:
+  st.session_state.matched_people = []
 if "selected_address" not in st.session_state:
   st.session_state.selected_address = None
 if "people_list" not in st.session_state:
@@ -74,6 +76,7 @@ if st.button("確認是否去年有參加"):
         st.session_state.verified_name = input_name.strip()
         st.session_state.last_year_participant = bool(addresses)
         st.session_state.matched_addresses = []
+        st.session_state.matched_people = []
         st.session_state.search_done = False
         st.session_state.selected_address = None
         st.session_state.people_list = []
@@ -118,6 +121,7 @@ if name_is_verified:
         if res.get("status") == "success":
           addresses = res.get("addresses", [])
           st.session_state.matched_addresses = addresses
+          st.session_state.matched_people = res.get("people", [])
           st.session_state.search_done = True
           st.session_state.selected_address = None
           st.session_state.people_list = []
@@ -146,20 +150,8 @@ if (
     if st.button(f"📍 確認地址：{addr}", key=f"addr_btn_{idx}"):
       st.session_state.selected_address = addr
       st.session_state.people_selection_id = uuid.uuid4().hex
-      st.session_state.people_list = []
+      st.session_state.people_list = st.session_state.matched_people
       st.session_state.submission_result = None
-      with st.spinner("載入該住址名單..."):
-        people_res = call_gas(
-            "search_jigai_2026",
-            {"sheetId": SHEET_2026_JIGAI_ID, "address": addr},
-        )
-        if people_res.get("status") == "success":
-          st.session_state.people_list = [
-              p["name"] for p in people_res.get("people", [])
-          ]
-        else:
-          error_message = people_res.get("message", "未知錯誤")
-          st.error(f"載入住址名單失敗：{error_message}")
 
 # # * 11051346 更改個別可選擇
 # 規則 2：個別選擇參加 116 年（2027 年）祭改的人員
@@ -171,19 +163,25 @@ if (
   st.markdown("---")
   st.write(f"**確認地址：** {st.session_state.selected_address}")
   st.write(
-      f"**同住址 2026 年參加名單（共 {len(st.session_state.people_list)} 人），"
+      f"**同手機關聯的 2026 年參加名單（共 {len(st.session_state.people_list)} 人），"
       "請勾選本次參加者：**"
   )
+  st.caption(
+      "名單會包含信徒資料總表中登記相同手機的姓名，即使去年住址不同；"
+      "收據地址使用上方確認的地址。"
+  )
   selected_indices = []
-  for idx, name in enumerate(st.session_state.people_list):
+  for idx, person in enumerate(st.session_state.people_list):
+    name = person["name"]
+    addresses = "、".join(person.get("addresses", []))
     if st.checkbox(
-        f"參加 116 年（2027 年）祭改：{name}",
+        f"參加 116 年（2027 年）祭改：{name}（{addresses}）",
         key=f"jigai_person_{st.session_state.people_selection_id}_{idx}",
     ):
       selected_indices.append(idx)
 
   selected_people = [
-      st.session_state.people_list[idx] for idx in selected_indices
+      st.session_state.people_list[idx]["name"] for idx in selected_indices
   ]
   count = len(selected_people)
   unit_price = 300
