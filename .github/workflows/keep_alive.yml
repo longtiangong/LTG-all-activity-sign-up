@@ -32,7 +32,8 @@ jobs:
           const { chromium } = require('playwright');
 
           const appUrls = [
-            'https://ltgjigaisu.streamlit.app/?embed=true',
+            'https://ltgjgsu.streamlit.app/?embed=true',
+            
           ];
 
           (async () => {
