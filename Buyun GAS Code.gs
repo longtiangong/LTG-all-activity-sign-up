@@ -299,10 +299,11 @@ function htmlEscape(value) {
     "&": "&",
     "<": "<",
     ">": ">",
-    '"': """,
-    "'": "'"
+    "\x27": "'"
   }[character]));
 }
+
+
 
 function sendTelegramMessage(botToken, chatId, messageText) {
   const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
