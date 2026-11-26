@@ -42,7 +42,7 @@ BUYUN_SESSIONS = {
         "session_name": "六月補運",
         "sheet_id": SHEET_BUYUN_JUNE_ID,
         "secret_key": "SHEET_BUYUN_JUNE_ID",
-        "start_at": datetime.datetime(2026, 11, 26, 16, 0, 0, tzinfo=TZ_TW),
+        "start_at": datetime.datetime(2026, 12, 26, 16, 0, 0, tzinfo=TZ_TW),
         "end_at": datetime.datetime(2027, 7, 18, 23, 59, 59, tzinfo=TZ_TW),
     },
     "BUYUN_SEPTEMBER": {
@@ -50,7 +50,7 @@ BUYUN_SESSIONS = {
         "session_name": "九月補運",
         "sheet_id": SHEET_BUYUN_SEPTEMBER_ID,
         "secret_key": "SHEET_BUYUN_SEPTEMBER_ID",
-        "start_at": datetime.datetime(2026, 11, 26, 16, 0, 0, tzinfo=TZ_TW),
+        "start_at": datetime.datetime(2026, 12, 26, 16, 0, 0, tzinfo=TZ_TW),
         "end_at": datetime.datetime(2027, 10, 3, 23, 59, 59, tzinfo=TZ_TW),
     },
 }
