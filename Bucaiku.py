@@ -109,7 +109,7 @@ def build_receipt_qr_url(receipt_no):
 
 
 st.set_page_config(page_title="龍天宮 補財庫報名系統", page_icon="⛩️")
-st.title("⛩️ 龍天宮 民國116(2027)年 補財庫快速報名")
+st.title("⛩️ 龍天宮 民國116(2027)年 補財庫快速查詢直接報名")
 
 if "matched_addresses" not in st.session_state:
   st.session_state.matched_addresses = []

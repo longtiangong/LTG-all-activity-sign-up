@@ -29,11 +29,20 @@
 Streamlit secrets 需設定 `SHEET_BELIEVER_ID` 為「信徒資料總表」試算表 ID。
 
 ==補運==
-主要檔案：[text](Buyun.py)
+主要檔案：Buyun.py
 GAS：Buyun GAS Code.gs
 
 
+==補財庫==
+主要檔案：Bucaiku.py
+GAS：Bucaiku GAS Code.gs
 
+# 每年要更新內容規則：
+1. py檔工作表名稱：主要更改"history_tab_name": "2026丙午年三月聖誕"，三、六、九月。,
+在line # 40, # 50, # 60
+2026丙午年三月聖誕。改為`2027丁未年三月聖誕` 
+2026丙午年六月聖誕。改為`2027丁未年六月聖誕` 
+2026丙午年九月聖誕。改為`2027丁未年九月聖誕` 
 
 
 
