@@ -34,6 +34,7 @@ BUYUN_SESSIONS = {
         "session_name": "三月補運",
         "sheet_id": SHEET_BUYUN_MARCH_ID,
         "secret_key": "SHEET_BUYUN_MARCH_ID",
+        "history_tab_name": "2026丙午年三月聖誕",
         "start_at": datetime.datetime(2026, 12, 26, 16, 0, 0, tzinfo=TZ_TW),
         "end_at": datetime.datetime(2027, 4, 9, 23, 59, 59, tzinfo=TZ_TW),
     },
@@ -42,6 +43,7 @@ BUYUN_SESSIONS = {
         "session_name": "六月補運",
         "sheet_id": SHEET_BUYUN_JUNE_ID,
         "secret_key": "SHEET_BUYUN_JUNE_ID",
+        "history_tab_name": "2026丙午年六月聖誕",
         "start_at": datetime.datetime(2026, 11, 26, 16, 0, 0, tzinfo=TZ_TW),
         "end_at": datetime.datetime(2027, 7, 18, 23, 59, 59, tzinfo=TZ_TW),
     },
@@ -50,6 +52,7 @@ BUYUN_SESSIONS = {
         "session_name": "九月補運",
         "sheet_id": SHEET_BUYUN_SEPTEMBER_ID,
         "secret_key": "SHEET_BUYUN_SEPTEMBER_ID",
+        "history_tab_name": "2026丙午年九月聖誕",
         "start_at": datetime.datetime(2026, 12, 26, 16, 0, 0, tzinfo=TZ_TW),
         "end_at": datetime.datetime(2027, 10, 3, 23, 59, 59, tzinfo=TZ_TW),
     },
@@ -120,7 +123,7 @@ with st.expander("📅 各場次報名開放時間"):
         f"{cfg['end_at'].strftime('%Y/%m/%d %H:%M')}（{status_text}）"
     )
 
-# 規則 1：先確認去年是否參與，再以手機查詢信徒資料總表中的住址
+# 規則 1：先確認去年聖誕工作表中是否有該姓名，再以手機呼叫 search_believer_address
 input_name = st.text_input("請輸入姓名：", placeholder="例如：張一")
 
 st.write("請選擇要查詢的去年聖誕紀錄：")
@@ -143,27 +146,31 @@ for idx, (session_key, cfg) in enumerate(BUYUN_SESSIONS.items()):
         )
       elif not cfg["sheet_id"]:
         st.error(f"請先在 Streamlit secrets 設定 {cfg['secret_key']}。")
-      elif not SHEET_BELIEVER_ID:
-        st.error("請先在 Streamlit secrets 設定 SHEET_BELIEVER_ID。")
       elif not input_name.strip():
         st.warning("請先輸入姓名。")
       else:
-        with st.spinner(f"正在查詢「{cfg['button_label']}」..."):
+        with st.spinner(
+            f"正在查詢「{cfg['history_tab_name']}」工作表紀錄..."
+        ):
           res = call_gas(
-              "search_believer_address",
+              "search_buyun_2026",
               {
-                  "believerSheetId": SHEET_BELIEVER_ID,
-                  "buyunSheetId": cfg["sheet_id"],
+                  "sheetId": cfg["sheet_id"],
+                  "tabName": cfg["history_tab_name"],
                   "name": input_name.strip(),
-                  "phone": "",
               },
           )
 
           if res.get("status") == "success":
-            addresses = res.get("addresses", [])
+            found = bool(
+                res.get("found")
+                or res.get("exists")
+                or res.get("matched")
+                or res.get("addresses")
+            )
             st.session_state.verified_name = input_name.strip()
             st.session_state.selected_session_key = session_key
-            st.session_state.last_year_participant = bool(addresses)
+            st.session_state.last_year_participant = found
             st.session_state.matched_addresses = []
             st.session_state.matched_people = []
             st.session_state.search_done = False
@@ -171,9 +178,9 @@ for idx, (session_key, cfg) in enumerate(BUYUN_SESSIONS.items()):
             st.session_state.people_list = []
             st.session_state.submission_result = None
 
-            if not addresses:
+            if not found:
               st.error(
-                  f"⚠️ 查無「{cfg['button_label']}」紀錄，"
+                  f"⚠️ 查無「{cfg['history_tab_name']}」參加紀錄，"
                   "請直接回原報名連結進行填寫。"
               )
           else:
@@ -200,7 +207,10 @@ if name_is_verified and active_session_status != "open":
   name_is_verified = False
 
 if name_is_verified:
-  st.info(f"📌 目前查詢場次：**{active_session_cfg['button_label']}**")
+  st.success(
+      f"✅ 已於「{active_session_cfg['history_tab_name']}」找到"
+      f" **{st.session_state.verified_name}** 的去年參加紀錄"
+  )
   # * 11061214 再輸入手機號碼當個別密碼
   input_phone = st.text_input(
       "請輸入手機號碼（作為個別密碼）：",
@@ -210,12 +220,13 @@ if name_is_verified:
     if not SHEET_BELIEVER_ID:
       st.error("請先在 Streamlit secrets 設定 SHEET_BELIEVER_ID。")
     elif input_phone.strip():
-      with st.spinner("驗證信徒資料並查詢去年住址中..."):
+      with st.spinner("正在呼叫 search_believer_address 查詢信徒資料..."):
         res = call_gas(
             "search_believer_address",
             {
                 "believerSheetId": SHEET_BELIEVER_ID,
                 "buyunSheetId": active_session_cfg["sheet_id"],
+                "tabName": active_session_cfg["history_tab_name"],
                 "name": st.session_state.verified_name,
                 "phone": input_phone.strip(),
             },
