@@ -127,7 +127,9 @@ st.write("請選擇要查詢的去年聖誕紀錄：")
 btn_cols = st.columns(3)
 for idx, (session_key, cfg) in enumerate(BUYUN_SESSIONS.items()):
   with btn_cols[idx]:
-    if st.button(cfg["button_label"], key=f"btn_{session_key}", use_container_width=True):
+    if st.button(
+        cfg["button_label"], key=f"btn_{session_key}", use_container_width=True
+    ):
       status, _ = get_session_status(session_key)
       if status == "before":
         st.warning(
@@ -141,13 +143,20 @@ for idx, (session_key, cfg) in enumerate(BUYUN_SESSIONS.items()):
         )
       elif not cfg["sheet_id"]:
         st.error(f"請先在 Streamlit secrets 設定 {cfg['secret_key']}。")
+      elif not SHEET_BELIEVER_ID:
+        st.error("請先在 Streamlit secrets 設定 SHEET_BELIEVER_ID。")
       elif not input_name.strip():
         st.warning("請先輸入姓名。")
       else:
         with st.spinner(f"正在查詢「{cfg['button_label']}」..."):
           res = call_gas(
-              "search_buyun_2026",
-              {"sheetId": cfg["sheet_id"], "name": input_name.strip()},
+              "search_believer_address",
+              {
+                  "believerSheetId": SHEET_BELIEVER_ID,
+                  "buyunSheetId": cfg["sheet_id"],
+                  "name": input_name.strip(),
+                  "phone": "",
+              },
           )
 
           if res.get("status") == "success":
