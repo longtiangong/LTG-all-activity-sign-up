@@ -32,6 +32,7 @@ BUYUN_SESSIONS = {
     "BUYUN_MARCH": {
         "button_label": "查詢去年三月聖誕",
         "session_name": "三月補運",
+        "event_title": "三月聖誕補運",
         "sheet_id": SHEET_BUYUN_MARCH_ID,
         "secret_key": "SHEET_BUYUN_MARCH_ID",
         "history_tab_name": "2026丙午年三月聖誕",
@@ -41,6 +42,7 @@ BUYUN_SESSIONS = {
     "BUYUN_JUNE": {
         "button_label": "查詢去年六月聖誕",
         "session_name": "六月補運",
+        "event_title": "六月聖誕補運",
         "sheet_id": SHEET_BUYUN_JUNE_ID,
         "secret_key": "SHEET_BUYUN_JUNE_ID",
         "history_tab_name": "2026丙午年六月聖誕",
@@ -50,6 +52,7 @@ BUYUN_SESSIONS = {
     "BUYUN_SEPTEMBER": {
         "button_label": "查詢去年九月聖誕",
         "session_name": "九月補運",
+        "event_title": "九月聖誕補運",
         "sheet_id": SHEET_BUYUN_SEPTEMBER_ID,
         "secret_key": "SHEET_BUYUN_SEPTEMBER_ID",
         "history_tab_name": "2026丙午年九月聖誕",
@@ -162,15 +165,10 @@ for idx, (session_key, cfg) in enumerate(BUYUN_SESSIONS.items()):
           )
 
           if res.get("status") == "success":
-            found = bool(
-                res.get("found")
-                or res.get("exists")
-                or res.get("matched")
-                or res.get("addresses")
-            )
+            addresses = res.get("addresses", [])
             st.session_state.verified_name = input_name.strip()
             st.session_state.selected_session_key = session_key
-            st.session_state.last_year_participant = found
+            st.session_state.last_year_participant = bool(addresses)
             st.session_state.matched_addresses = []
             st.session_state.matched_people = []
             st.session_state.search_done = False
@@ -178,7 +176,7 @@ for idx, (session_key, cfg) in enumerate(BUYUN_SESSIONS.items()):
             st.session_state.people_list = []
             st.session_state.submission_result = None
 
-            if not found:
+            if not addresses:
               st.error(
                   f"⚠️ 查無「{cfg['history_tab_name']}」參加紀錄，"
                   "請直接回原報名連結進行填寫。"
@@ -275,7 +273,7 @@ if (
     and st.session_state.people_list
 ):
   st.markdown("---")
-  st.write(f"**報名場次：** {active_session_cfg['session_name']}")
+  st.write(f"**報名場次：** {active_session_cfg['event_title']}")
   st.write(f"**確認地址：** {st.session_state.selected_address}")
   st.write(
       f"**同手機關聯的 2026 年參加名單（共 {len(st.session_state.people_list)} 人），"
@@ -290,7 +288,7 @@ if (
     name = person["name"]
     addresses = "、".join(person.get("addresses", []))
     if st.checkbox(
-        f"參加 116 年（2027 年）補運：{name}（{addresses}）",
+        f"參加 116 年（2027 年）{active_session_cfg['event_title']}：{name}（{addresses}）",
         key=f"buyun_person_{st.session_state.people_selection_id}_{idx}",
     ):
       selected_indices.append(idx)
@@ -303,8 +301,9 @@ if (
   total_amount = count * unit_price
 
   if count:
+    event_title = active_session_cfg["event_title"]
     summary_text = (
-        f"116年(2027年){active_session_cfg['session_name']}人數 "
+        f"116年(2027年){event_title}人數 "
         f"{count} 人金額共 {total_amount} 元"
     )
     st.info(f"💡 **報名統計：** {summary_text}")
@@ -327,12 +326,14 @@ if (
           )
         else:
           with st.spinner("正在寫入收入表、產生 PDF 並發送 Telegram 通知..."):
+            session_name = active_session_cfg["session_name"]
             submit_res = call_gas(
                 "submit_registration",
                 {
                     "incomeSheetId": SHEET_INCOME_ID,
                     "sessionKey": active_session_key,
-                    "sessionName": active_session_cfg["session_name"],
+                    "sessionName": session_name,
+                    "eventTitle": event_title,
                     "address": st.session_state.selected_address,
                     "peopleNames": selected_people,
                     "count": count,
@@ -346,9 +347,8 @@ if (
                   TZ_TW
               ).strftime("%Y-%m-%d %H:%M:%S")
               qr_url = build_receipt_qr_url(receipt_no)
-              session_name = active_session_cfg["session_name"]
               system_note = (
-                  f"補運{session_name}人數{count}人金額共{total_amount}元"
+                  f"{event_title}人數{count}人金額共{total_amount}元"
               )
               receipt_data = {
                   "收據編號": receipt_no,
@@ -374,6 +374,8 @@ if (
                         "receiptNo": receipt_no,
                         "folderId": RECEIPT_PDF_FOLDER_ID,
                         "pdfBase64": base64.b64encode(pdf_bytes).decode("ascii"),
+                        "sessionName": session_name,
+                        "eventTitle": event_title,
                         "address": st.session_state.selected_address,
                         "peopleNames": selected_people,
                         "count": count,
@@ -394,6 +396,7 @@ if (
                 }
               st.session_state.submission_result = submit_res
               st.session_state.submission_result["sessionName"] = session_name
+              st.session_state.submission_result["eventTitle"] = event_title
               st.session_state.submission_result["count"] = count
               st.session_state.submission_result["totalAmount"] = total_amount
               st.session_state.submission_result["peopleNames"] = selected_people
@@ -418,7 +421,7 @@ if (
 
 if name_is_verified and st.session_state.submission_result:
   res = st.session_state.submission_result
-  session_name = res.get("sessionName", "補運")
+  event_title = res.get("eventTitle", "補運")
   receipt_no = res.get("receiptNo")
   count = res.get("count")
   total_amount = res.get("totalAmount")
@@ -454,11 +457,11 @@ if name_is_verified and st.session_state.submission_result:
     )
 
   line_text = (
-      f"【龍天宮 116(2027)年 {session_name}報名】\n"
+      f"【龍天宮 116(2027)年 {event_title}報名】\n"
       f"收據編號：{receipt_no}\n"
       f"地址：{st.session_state.selected_address}\n"
       f"報名人員：{', '.join(people_names)}\n"
-      f"116年(2027年){session_name}人數 {count} 人金額共 {total_amount} 元\n\n"
+      f"116年(2027年){event_title}人數 {count} 人金額共 {total_amount} 元\n\n"
       f"收據 PDF：\n{pdf_url or '請使用網站上的下載按鈕'}"
   )
 

@@ -34,7 +34,7 @@ function doPost(e) {
     if (action === "search_buyun_2026") {
       const sheetId = data.sheetId;
       const ss = SpreadsheetApp.openById(sheetId);
-      const sheetName = "2026丙午年六月聖誕";
+      const sheetName = String(data.tabName || "2026丙午年六月聖誕").trim();
       const sheet = ss.getSheetByName(sheetName);
       if (!sheet) {
         return responseJSON({
@@ -102,11 +102,12 @@ function doPost(e) {
       const matchedPeople = [];
       if (phoneMatchedNames.has(searchName)) {
         const buyunSpreadsheet = SpreadsheetApp.openById(data.buyunSheetId);
-        const buyunSheet = buyunSpreadsheet.getSheetByName("2026丙午年六月聖誕");
+        const tabName = String(data.tabName || "2026丙午年六月聖誕").trim();
+        const buyunSheet = buyunSpreadsheet.getSheetByName(tabName);
         if (!buyunSheet) {
           return responseJSON({
             status: "error",
-            message: "找不到工作表分頁「2026丙午年六月聖誕」"
+            message: `找不到工作表分頁「${tabName}」`
           });
         }
         const buyunRows = buyunSheet.getDataRange().getDisplayValues();
@@ -148,7 +149,9 @@ function doPost(e) {
       const incomeSheet = SpreadsheetApp.openById(data.incomeSheetId).getActiveSheet();
       
       const primaryName = data.peopleNames && data.peopleNames.length > 0 ? data.peopleNames[0] : "";
-      const systemNote = `補運人數${data.count}人金額為${data.totalAmount}元`;
+      const sessionName = String(data.sessionName || "補運").trim();
+      const eventTitle = String(data.eventTitle || "補運").trim();
+      const systemNote = `${eventTitle}人數${data.count}人金額為${data.totalAmount}元`;
       
       incomeSheet.appendRow([
         receiptNo,                   // A: 收據編號
@@ -157,7 +160,7 @@ function doPost(e) {
         data.address,                // D: 地址
         "收入",                       // E: 辦理項目
         "補運",                       // F: 科目
-        "六月補運",                    // G: 規格
+        sessionName,                 // G: 規格（如：三月補運 / 六月補運 / 九月補運）
         data.totalAmount,            // H: 金額(元)
         data.count,                  // I: 選項人數
         systemNote,                  // J: 系統備註
@@ -171,7 +174,7 @@ function doPost(e) {
         status: "success",
         receiptNo: receiptNo,
         openedAt: formatDateTime(now),
-        message: `116年(2027年)補運人數${data.count}人金額為${data.totalAmount}元`
+        message: `116年(2027年)${eventTitle}人數${data.count}人金額為${data.totalAmount}元`
       });
     }
 
@@ -216,12 +219,13 @@ function doPost(e) {
 
       let telegramResult = { status: "skipped" };
       if (data.telegramBotToken && data.telegramChatId) {
-        const notifyMsg = `【龍天宮 116(2027)年 補運報名通知】\n` +
+        const eventTitle = String(data.eventTitle || "補運").trim();
+        const notifyMsg = `【龍天宮 116(2027)年 ${eventTitle}報名通知】\n` +
                           `收據編號：${data.receiptNo}\n` +
                           `姓名代表：${data.peopleNames[0]}\n` +
                           `地址：${data.address}\n` +
                           `報名人員：${data.peopleNames.join(", ")}\n` +
-                          `116年(2027年)補運人數 ${data.count} 人，金額為 ${data.totalAmount} 元\n\n` +
+                          `116年(2027年)${eventTitle}人數 ${data.count} 人，金額為 ${data.totalAmount} 元\n\n` +
                           `收據 PDF 連結：\n${pdfFile.getUrl()}`;
         try {
           telegramResult = sendTelegramMessage(
@@ -292,11 +296,11 @@ function authorizeReceiptDriveAccess() {
 
 function htmlEscape(value) {
   return String(value).replace(/[&<>"']/g, character => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;"
+    "&": "&",
+    "<": "<",
+    ">": ">",
+    '"': """,
+    "'": "'"
   }[character]));
 }
 
