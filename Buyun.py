@@ -46,8 +46,8 @@ RAW_BUYUN_SESSIONS = {
         "sheet_id": SHEET_BUYUN_JUNE_ID,
         "secret_key": "SHEET_BUYUN_JUNE_ID",
         "history_tab_name": "2026丙午年六月聖誕",
-        "start_at": "2026-12-26T16:00:00+08:00",
-        "end_at": "2027-07-18T23:59:59+08:00",
+        "start_at": "2027-06-01T08:00:00+08:00",
+        "end_at": "2027-07-18T10:00:00+08:00",
     },
     "BUYUN_SEPTEMBER": {
         "button_label": "查詢去年九月聖誕",
@@ -56,8 +56,8 @@ RAW_BUYUN_SESSIONS = {
         "sheet_id": SHEET_BUYUN_SEPTEMBER_ID,
         "secret_key": "SHEET_BUYUN_SEPTEMBER_ID",
         "history_tab_name": "2026丙午年九月聖誕",
-        "start_at": "2026-11-26T16:00:00+08:00",
-        "end_at": "2027-10-03T23:59:59+08:00",
+        "start_at": "2027-08-30T08:00:00+08:00",
+        "end_at": "2027-10-03T10:00:00+08:00",
     },
 }
 
