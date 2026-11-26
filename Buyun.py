@@ -28,7 +28,7 @@ RECEIPT_PDF_FOLDER_ID = str(
 TELEGRAM_BOT_TOKEN = st.secrets.get("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID = st.secrets.get("TELEGRAM_CHAT_ID", "")
 
-BUYUN_SESSIONS = {
+RAW_BUYUN_SESSIONS = {
     "BUYUN_MARCH": {
         "button_label": "查詢去年三月聖誕",
         "session_name": "三月補運",
@@ -36,8 +36,8 @@ BUYUN_SESSIONS = {
         "sheet_id": SHEET_BUYUN_MARCH_ID,
         "secret_key": "SHEET_BUYUN_MARCH_ID",
         "history_tab_name": "2026丙午年三月聖誕",
-        "start_at": datetime.datetime(2026, 12, 26, 16, 0, 0, tzinfo=TZ_TW),
-        "end_at": datetime.datetime(2027, 4, 9, 23, 59, 59, tzinfo=TZ_TW),
+        "start_at": "2027-02-15T08:00:00+08:00",
+        "end_at": "2027-04-08T12:00:00+08:00",
     },
     "BUYUN_JUNE": {
         "button_label": "查詢去年六月聖誕",
@@ -46,8 +46,8 @@ BUYUN_SESSIONS = {
         "sheet_id": SHEET_BUYUN_JUNE_ID,
         "secret_key": "SHEET_BUYUN_JUNE_ID",
         "history_tab_name": "2026丙午年六月聖誕",
-        "start_at": datetime.datetime(2026, 12, 26, 16, 0, 0, tzinfo=TZ_TW),
-        "end_at": datetime.datetime(2027, 7, 18, 23, 59, 59, tzinfo=TZ_TW),
+        "start_at": "2026-12-26T16:00:00+08:00",
+        "end_at": "2027-07-18T23:59:59+08:00",
     },
     "BUYUN_SEPTEMBER": {
         "button_label": "查詢去年九月聖誕",
@@ -56,9 +56,28 @@ BUYUN_SESSIONS = {
         "sheet_id": SHEET_BUYUN_SEPTEMBER_ID,
         "secret_key": "SHEET_BUYUN_SEPTEMBER_ID",
         "history_tab_name": "2026丙午年九月聖誕",
-        "start_at": datetime.datetime(2026, 11, 26, 16, 0, 0, tzinfo=TZ_TW),
-        "end_at": datetime.datetime(2027, 10, 3, 23, 59, 59, tzinfo=TZ_TW),
+        "start_at": "2026-11-26T16:00:00+08:00",
+        "end_at": "2027-10-03T23:59:59+08:00",
     },
+}
+
+
+def parse_iso_dt(value):
+  dt = datetime.datetime.fromisoformat(value)
+  if dt.tzinfo is None:
+    return dt.replace(tzinfo=TZ_TW)
+  return dt.astimezone(TZ_TW)
+
+
+BUYUN_SESSIONS = {
+    key: {
+        **cfg,
+        "start_at_str": cfg["start_at"],
+        "end_at_str": cfg["end_at"],
+        "start_at": parse_iso_dt(cfg["start_at"]),
+        "end_at": parse_iso_dt(cfg["end_at"]),
+    }
+    for key, cfg in RAW_BUYUN_SESSIONS.items()
 }
 
 
@@ -122,8 +141,7 @@ with st.expander("📅 各場次報名開放時間"):
     }[status]
     st.write(
         f"- **{cfg['session_name']}（{key}）**："
-        f"{cfg['start_at'].strftime('%Y/%m/%d %H:%M')} ～ "
-        f"{cfg['end_at'].strftime('%Y/%m/%d %H:%M')}（{status_text}）"
+        f"{cfg['start_at_str']} ～ {cfg['end_at_str']}（{status_text}）"
     )
 
 # 規則 1：先確認去年聖誕工作表中是否有該姓名，再以手機呼叫 search_believer_address
@@ -140,12 +158,12 @@ for idx, (session_key, cfg) in enumerate(BUYUN_SESSIONS.items()):
       if status == "before":
         st.warning(
             f"⏳ {cfg['session_name']}尚未開放報名"
-            f"（開放時間：{cfg['start_at'].strftime('%Y/%m/%d %H:%M')}）。"
+            f"（開放時間：{cfg['start_at_str']}）。"
         )
       elif status == "expired":
         st.error(
             f"⛔ {cfg['session_name']}已超過報名截止時間"
-            f"（截止時間：{cfg['end_at'].strftime('%Y/%m/%d %H:%M')}）。"
+            f"（截止時間：{cfg['end_at_str']}）。"
         )
       elif not cfg["sheet_id"]:
         st.error(f"請先在 Streamlit secrets 設定 {cfg['secret_key']}。")
@@ -199,8 +217,8 @@ name_is_verified = (
 if name_is_verified and active_session_status != "open":
   st.error(
       f"⛔ {active_session_cfg['session_name']}目前不在開放報名時段內"
-      f"（{active_session_cfg['start_at'].strftime('%Y/%m/%d %H:%M')} ～ "
-      f"{active_session_cfg['end_at'].strftime('%Y/%m/%d %H:%M')}）。"
+      f"（{active_session_cfg['start_at_str']} ～ "
+      f"{active_session_cfg['end_at_str']}）。"
   )
   name_is_verified = False
 
