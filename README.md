@@ -28,6 +28,9 @@
 
 Streamlit secrets 需設定 `SHEET_BELIEVER_ID` 為「信徒資料總表」試算表 ID。
 
+==補運==
+主要檔案：[text](Buyun.py)
+GAS：Buyun GAS Code.gs
 
 
 
