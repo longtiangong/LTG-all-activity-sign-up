@@ -38,7 +38,7 @@ RAW_BUCAIKU_SESSIONS = {
         "sheet_id": SHEET_BUCAIKU_MARCH_ID,
         "secret_key": "SHEET_BUCAIKU_MARCH_ID",
         "history_tab_name": "2026丙午年三月聖誕",
-        "start_at": "2027-02-15T08:00:00+08:00",
+        "start_at": "2026-02-15T08:00:00+08:00",
         "end_at": "2027-04-08T12:00:00+08:00",
     },
     "BUCAIKU_JUNE": {
@@ -48,7 +48,7 @@ RAW_BUCAIKU_SESSIONS = {
         "sheet_id": SHEET_BUCAIKU_JUNE_ID,
         "secret_key": "SHEET_BUCAIKU_JUNE_ID",
         "history_tab_name": "2026丙午年六月聖誕",
-        "start_at": "2027-06-01T08:00:00+08:00",
+        "start_at": "2026-06-01T08:00:00+08:00",
         "end_at": "2027-07-18T10:00:00+08:00",
     },
     "BUCAIKU_SEPTEMBER": {
@@ -58,7 +58,7 @@ RAW_BUCAIKU_SESSIONS = {
         "sheet_id": SHEET_BUCAIKU_SEPTEMBER_ID,
         "secret_key": "SHEET_BUCAIKU_SEPTEMBER_ID",
         "history_tab_name": "2026丙午年九月聖誕",
-        "start_at": "2027-08-30T08:00:00+08:00",
+        "start_at": "2026-08-30T08:00:00+08:00",
         "end_at": "2027-10-03T10:00:00+08:00",
     },
 }
