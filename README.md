@@ -28,6 +28,9 @@
 
 Streamlit secrets 需設定 `SHEET_BELIEVER_ID` 為「信徒資料總表」試算表 ID。
 
+# 規劃想法
+使用者輸入「姓名」後點擊對應的查詢按鈕時，先以該場次對應的 Sheet ID 與指定分頁名稱（例如六月為 2026丙午年六月聖誕）向 GAS 查詢名單是否參加過；若名單有在該工作表中，再輸入「手機號碼」呼叫 search_believer_address 帶出信徒資料與住址。
+
 ==補運==
 主要檔案：Buyun.py
 GAS：Buyun GAS Code.gs
