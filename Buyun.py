@@ -147,7 +147,7 @@ with st.expander("📅 各場次報名開放時間"):
 # 規則 1：先確認去年聖誕工作表中是否有該姓名，再以手機呼叫 search_believer_address
 input_name = st.text_input("請輸入姓名：", placeholder="例如：張一")
 
-st.write("請選擇要查詢的去年聖誕紀錄：")
+st.write("請選擇要查詢去年補運紀錄：")
 btn_cols = st.columns(3)
 for idx, (session_key, cfg) in enumerate(BUYUN_SESSIONS.items()):
   with btn_cols[idx]:
