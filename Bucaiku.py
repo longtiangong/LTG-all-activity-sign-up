@@ -176,7 +176,7 @@ for idx, (session_key, cfg) in enumerate(BUCAIKU_SESSIONS.items()):
             f"正在查詢「{cfg['history_tab_name']}」工作表紀錄..."
         ):
           res = call_gas(
-              "search_BUCAIKU_2026",
+              "search_bucaiku_2026",
               {
                   "sheetId": cfg["sheet_id"],
                   "tabName": cfg["history_tab_name"],
@@ -243,7 +243,7 @@ if name_is_verified:
             "search_believer_address",
             {
                 "believerSheetId": SHEET_BELIEVER_ID,
-                "BUCAIKUSheetId": active_session_cfg["sheet_id"],
+                "bucaikuSheetId": active_session_cfg["sheet_id"],
                 "tabName": active_session_cfg["history_tab_name"],
                 "name": st.session_state.verified_name,
                 "phone": input_phone.strip(),
@@ -309,7 +309,7 @@ if (
     addresses = "、".join(person.get("addresses", []))
     if st.checkbox(
         f"參加 116 年（2027 年）{active_session_cfg['event_title']}：{name}（{addresses}）",
-        key=f"BUCAIKU_person_{st.session_state.people_selection_id}_{idx}",
+        key=f"bucaiku_person_{st.session_state.people_selection_id}_{idx}",
     ):
       selected_indices.append(idx)
 

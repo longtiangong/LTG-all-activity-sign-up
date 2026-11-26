@@ -31,7 +31,7 @@ function doPost(e) {
 
     // # * 11051310 更改欄位
     // 1. 查詢指定分頁的補財庫名單：姓名 D 欄、住址 B 欄
-    if (action === "search_BUCAIKU_2026") {
+    if (action === "search_bucaiku_2026") {
       const sheetId = data.sheetId;
       const ss = SpreadsheetApp.openById(sheetId);
       const sheetName = String(data.tabName || "2026丙午年六月聖誕").trim();
@@ -101,19 +101,19 @@ function doPost(e) {
       const matchedAddresses = [];
       const matchedPeople = [];
       if (phoneMatchedNames.has(searchName)) {
-        const BUCAIKUSpreadsheet = SpreadsheetApp.openById(data.BUCAIKUSheetId);
+        const bucaikuSpreadsheet = SpreadsheetApp.openById(data.bucaikuSheetId);
         const tabName = String(data.tabName || "2026丙午年六月聖誕").trim();
-        const BUCAIKUSheet = BUCAIKUSpreadsheet.getSheetByName(tabName);
-        if (!BUCAIKUSheet) {
+        const bucaikuSheet = bucaikuSpreadsheet.getSheetByName(tabName);
+        if (!bucaikuSheet) {
           return responseJSON({
             status: "error",
             message: `找不到工作表分頁「${tabName}」`
           });
         }
-        const BUCAIKURows = BUCAIKUSheet.getDataRange().getDisplayValues();
-        for (let i = 1; i < BUCAIKURows.length; i++) {
-          const address = String(BUCAIKURows[i][1]).trim();
-          const name = String(BUCAIKURows[i][3]).trim();
+        const bucaikuRows = bucaikuSheet.getDataRange().getDisplayValues();
+        for (let i = 1; i < bucaikuRows.length; i++) {
+          const address = String(bucaikuRows[i][1]).trim();
+          const name = String(bucaikuRows[i][3]).trim();
           if (phoneMatchedNames.has(name) && address) {
             if (!matchedAddresses.includes(address)) {
               matchedAddresses.push(address);
