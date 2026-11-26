@@ -8,6 +8,8 @@ import streamlit as st
 
 from receipt_pdf import create_receipt_pdf, create_receipt_qr
 
+# * 補運查詢且直接報名系統
+
 TZ_TW = datetime.timezone(datetime.timedelta(hours=8))
 
 GAS_BUYUN_WEB_APP_URL = st.secrets["GAS_BUYUN_WEB_APP_URL"]
