@@ -48,7 +48,7 @@ RAW_BUCAIKU_SESSIONS = {
         "sheet_id": SHEET_BUCAIKU_JUNE_ID,
         "secret_key": "SHEET_BUCAIKU_JUNE_ID",
         "history_tab_name": "2026丙午年六月聖誕",
-        "start_at": "2027-06-01T08:00:00+08:00",
+        "start_at": "2026-06-01T08:00:00+08:00",
         "end_at": "2027-07-18T10:00:00+08:00",
     },
     "BUCAIKU_SEPTEMBER": {
