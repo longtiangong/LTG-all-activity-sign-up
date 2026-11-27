@@ -33,6 +33,8 @@ jobs:
 
           const appUrls = [
             'https://ltgjgsu.streamlit.app/?embed=true',
+            'https://ltgbysu.streamlit.app/?embed=true',
+            'https://ltgbcksu.streamlit.app/?embed=true',
             
           ];
 
